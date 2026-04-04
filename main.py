@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 # new Env("网易云合伙人每日评分")
-# cron "20 8 * * *"
+# cron: 20 8 * * *
 
 import requests
 
