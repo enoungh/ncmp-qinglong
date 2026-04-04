@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # coding: utf-8
 # new Env("网易云音乐账号刷新Cookie")
-# cron "0 22 * * 0"
+# cron: 0 22 * * 0
+
 import os
 import sys
 # 确保在青龙容器中运行时能正确导入 src
