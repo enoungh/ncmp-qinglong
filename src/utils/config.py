@@ -50,11 +50,7 @@ class Config:
         if md5_password := os.getenv("NETEASE_MD5_PASSWORD"):
             config["netease_md5_password"] = md5_password
             
-        # GitHub相关配置
-        if gh_token := os.getenv("GH_TOKEN"):
-            config["gh_token"] = gh_token
-        if gh_repo := os.getenv("GH_REPO"):
-            config["gh_repo"] = gh_repo
+        
             
         config.setdefault("wait_time_min", 15)
         config.setdefault("wait_time_max", 20)
