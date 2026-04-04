@@ -1,6 +1,6 @@
 import logging
+import sys  # <- 1. 新增导入 sys
 from typing import Optional
-
 
 class Logger:
     def __init__(self, log_level: Optional[int] = logging.DEBUG):
@@ -8,7 +8,8 @@ class Logger:
         logging.basicConfig(
             level=log_level,
             format='%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            datefmt='%Y-%m-%d %H:%M:%S',
+            stream=sys.stdout  # <- 2. 关键修改：强制输出到标准输出流
         )
         self.logger = logging.getLogger(__name__)
 
@@ -28,4 +29,4 @@ class Logger:
         if is_error:
             self.error(message)
         else:
-            self.info(message) 
+            self.info(message)
