@@ -29,6 +29,9 @@ def main():
             
         if not os.environ.get("NETEASE_MD5_PASSWORD") and config.get("netease_md5_password"):
             os.environ["NETEASE_MD5_PASSWORD"] = config.get("netease_md5_password")
+
+        if not os.environ.get("NETEASE_PYNCM_SESSION") and config.get("netease_pyncm_session"):
+            os.environ["NETEASE_PYNCM_SESSION"] = config.get("netease_pyncm_session")
         
         # 初始化并执行刷新任务
         task = CookieRefreshTask(logger, notifier)

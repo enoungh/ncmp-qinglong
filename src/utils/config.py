@@ -49,6 +49,8 @@ class Config:
             config["netease_password"] = password
         if md5_password := os.getenv("NETEASE_MD5_PASSWORD"):
             config["netease_md5_password"] = md5_password
+        if session_dump := os.getenv("NETEASE_PYNCM_SESSION"):
+            config["netease_pyncm_session"] = session_dump
             
         
             
