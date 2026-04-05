@@ -20,16 +20,6 @@ def main():
         logger = Logger()
         notifier = NotificationService(config, logger)
         
-        # 环境变量兜底
-        if not os.environ.get("NETEASE_PHONE") and config.get("netease_phone"):
-            os.environ["NETEASE_PHONE"] = config.get("netease_phone")
-            
-        if not os.environ.get("NETEASE_PASSWORD") and config.get("netease_password"):
-            os.environ["NETEASE_PASSWORD"] = config.get("netease_password")
-            
-        if not os.environ.get("NETEASE_MD5_PASSWORD") and config.get("netease_md5_password"):
-            os.environ["NETEASE_MD5_PASSWORD"] = config.get("netease_md5_password")
-
         if not os.environ.get("NETEASE_PYNCM_SESSION") and config.get("netease_pyncm_session"):
             os.environ["NETEASE_PYNCM_SESSION"] = config.get("netease_pyncm_session")
         

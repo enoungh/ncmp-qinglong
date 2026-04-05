@@ -82,40 +82,24 @@ class TestCookieRefreshTask(unittest.TestCase):
     @patch.dict(os.environ, {
         "MUSIC_U": "stale_music_u",
         "CSRF": "stale_csrf",
-        "NETEASE_PHONE": "13812345678",
-        "NETEASE_MD5_PASSWORD": "0123456789abcdef0123456789abcdef",
     }, clear=True)
-    def test_falls_back_to_password_login(self):
+    def test_stops_when_existing_login_state_cannot_refresh(self):
         self.mock_auth_service.last_error = "现有登录态不可用"
         self.mock_auth_service.refresh_login_state.return_value = (False, None)
-        self.mock_auth_service.login.return_value = (
-            True,
-            {
-                "Cookie_MUSIC_U": "new_music_u",
-                "Cookie___csrf": "new_csrf",
-                AuthService.SESSION_DUMP_KEY: "new_session_dump",
-            },
-        )
 
         task = CookieRefreshTask(self.logger, self.notifier)
 
-        self.assertTrue(task.execute())
-        self.mock_auth_service.login.assert_called_once_with(
-            phone="13812345678",
-            password=None,
-            md5_password="0123456789abcdef0123456789abcdef",
+        self.assertFalse(task.execute())
+        self.mock_auth_service.refresh_login_state.assert_called_once_with(
+            session_dump=None,
+            music_u="stale_music_u",
+            csrf="stale_csrf",
         )
-        self.assertEqual(
-            self.mock_ql_service.updated_payload,
-            {
-                "MUSIC_U": "new_music_u",
-                "CSRF": "new_csrf",
-                "NETEASE_PYNCM_SESSION": "new_session_dump",
-            },
-        )
+        self.mock_auth_service.login.assert_not_called()
+        self.assertIsNone(self.mock_ql_service.updated_payload)
 
     @patch.dict(os.environ, {}, clear=True)
-    def test_stops_when_no_valid_state_or_credentials(self):
+    def test_stops_when_no_login_state(self):
         task = CookieRefreshTask(self.logger, self.notifier)
 
         self.assertFalse(task.execute())

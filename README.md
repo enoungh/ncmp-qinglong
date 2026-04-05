@@ -1,111 +1,90 @@
-这是一份为你量身定制的、专供青龙面板使用的 `README.md` 文件。你可以直接复制以下内容替换你仓库里的原文件。
+# ncmp (青龙面板版)
 
------
+基于 [ACAne0320/ncmp](https://github.com/ACAne0320/ncmp) 调整的网易云音乐合伙人自动化脚本，适配青龙面板运行。
 
-# ncmp (青龙面板修改版)
+## 功能
 
-基于 [ACAne0320/ncmp](https://github.com/ACAne0320/ncmp) 优化的**网易云音乐合伙人（青龙面板专版）**。
-完美适配青龙环境，不仅能全自动完成日常任务，更能**自动刷新并在青龙面板内无缝更新 Cookie 环境变量**，实现真正的无人值守。
+- 自动完成每日评分任务
+- 支持青龙环境变量读取
+- 支持在青龙容器内读取 `auth.json` 更新环境变量
+- Cookie 失效或任务异常时发送邮件通知
+- 仅使用现有登录态续期 Cookie，不再执行手机号密码登录
 
-## ✨ 功能特点
-
-  - **全自动任务打卡**
-      - 完成每日 5 个基础评分任务
-      - 完成每日 7 个（或全部）额外评分任务
-  - **完美适配青龙面板**
-      - 原生支持青龙环境变量读取
-      - 支持内部穿透读取 `auth.json`，无需繁琐配置 Client ID/Secret 即可自动更新面板 Cookie
-  - **完善的通知机制**
-      - Cookie 失效或执行失败时自动发送邮件提醒
-  - **持久化运行**
-      - 优先使用现有登录态续期 Cookie，只有必要时才退回密码登录
-      - 自动将完整 `pyncm session` 与核心 Cookie 一并写回青龙环境变量
-
------
-
-## 📝 使用前准备：获取网易云 Cookie
+## 首次准备
 
 首次使用需要手动抓取一次 Cookie：
 
-1.  登录 [网易云音乐网页版](https://music.163.com/)
-2.  打开浏览器开发者工具（按 `F12`）
-3.  切换到 `Network`（网络）选项卡
-4.  刷新页面，在请求的 `cookie` 中找到 `MUSIC_U` 和 `__csrf` 的值
+1. 在常用设备浏览器登录 [网易云音乐网页版](https://music.163.com/)
+2. 完成必要的安全验证
+3. 打开开发者工具，在 `https://music.163.com/` 请求头的 `Cookie` 中取出 `MUSIC_U` 和 `__csrf`
+4. 写入青龙环境变量
 
------
+## 青龙配置
 
-## 🚀 青龙面板部署指南
+### 依赖
 
-### 第一步：安装依赖
-
-进入青龙面板 -\> **依赖管理** -\> 新建依赖 -\> 选择 **Python3**
-填入以下依赖名称并安装：
+安装 Python 依赖：
 
 ```text
 requests pycryptodome pyncm
 ```
 
-### 第二步：配置环境变量
+### 环境变量
 
-进入青龙面板 -\> **环境变量** -\> 新建变量，添加以下必备变量：
+必填：
 
-| 变量名 | 必填 | 说明 |
-| :--- | :---: | :--- |
-| `MUSIC_U` | ✅ | 抓取到的 MUSIC\_U 值（首次需手动填入，后续自动刷新） |
-| `CSRF` | ✅ | 抓取到的 \_\_csrf 值 |
-| `NETEASE_PHONE` | ✅ | 网易云音乐登录手机号 |
-| `NETEASE_MD5_PASSWORD` | ✅ | 网易云密码的 **MD5加密值**（强烈推荐，32位小写）。<br>*或使用 `NETEASE_PASSWORD` 填入明文密码（二选一）* |
-| `NETEASE_PYNCM_SESSION` | ❌ | 可选。脚本成功刷新后会自动维护的完整登录态，建议保留，不要手动修改 |
-| `SCORE` | ❌ | 评分策略：1=1-2分，2=2-3分，3=3-4分（默认），4=固定4分 |
-| `FULL_EXTRA_TASKS`| ❌ | 填 `true` 则完成所有额外任务，不填或 `false` 只做7个 |
+- `MUSIC_U`
+- `CSRF`
 
-*(如需邮件通知，可继续添加 `NOTIFY_EMAIL`, `EMAIL_PASSWORD`, `SMTP_SERVER`, `SMTP_PORT`)*
+可选：
 
-说明：首次仍建议手动抓一次 `MUSIC_U` / `CSRF`。后续刷新任务会优先复用已有登录态，并自动补齐 `NETEASE_PYNCM_SESSION`，尽量减少再次触发风控。
+- `NETEASE_PYNCM_SESSION`
+- `SCORE`
+- `FULL_EXTRA_TASKS`
+- `WAIT_TIME_MIN`
+- `WAIT_TIME_MAX`
+- `NOTIFY_EMAIL`
+- `EMAIL_PASSWORD`
+- `SMTP_SERVER`
+- `SMTP_PORT`
 
-### 第三步：拉取脚本仓库
+说明：
 
-进入青龙面板 -\> **定时任务** -\> 新建任务：
+- `NETEASE_PYNCM_SESSION` 不建议手动填写。首次成功续期后，脚本会自动写回。
+- `refresh_cookie.py` 现在只会使用现有登录态续期；如果 `MUSIC_U` 和 `CSRF` 已失效，脚本不会再尝试手机号密码登录。
 
-  - **名称：** 拉取 NCMP 代码
-  - **命令：** \`\`\`bash
-    ql repo https://github.com/enoungh/ncmp-qinglong.git "main.py|refresh\_cookie.py" "tests" "src" "main"
+### 定时任务
 
-  - **定时规则：** `0 0 * * *` (每天检查一次更新)
-  - 保存后，手动点击**运行**拉取代码。
+拉库任务示例：
 
-### 第四步：设置打卡与刷新任务
+```bash
+ql repo https://github.com/enoungh/ncmp-qinglong.git "main.py|refresh_cookie.py" "tests" "src" "main"
+```
 
-拉库成功后，再次进入 **定时任务** -\> 新建任务，创建以下两个核心任务：
+评分任务：
 
-**1. 每日打卡任务**
+```text
+task 你的GitHub用户名_ncmp/main.py
+```
 
-  - **名称：** 网易云合伙人评分
-  - **命令：** `task 你的GitHub用户名_ncmp/main.py`
-  - **定时规则：** `30 8 * * *` (每天8点30执行)
+刷新任务：
 
-**2. 自动刷新 Cookie 任务**
+```text
+task 你的GitHub用户名_ncmp/refresh_cookie.py
+```
 
-  - **名称：** 网易云合伙人刷新Cookie
-  - **命令：** `task 你的GitHub用户名_ncmp/refresh_cookie.py`
-  - **定时规则：** `0 22 * * 0` (每周日晚上22点执行)
-  - *提示：建议第一次配置完后手动运行一次本任务，若日志显示“成功更新青龙环境变量”，则说明配置完美闭环。*
+## 风控说明
 
------
+本项目不会绕过图形验证码，也不再执行手机号密码登录。
 
-## ⚠️ 常见问题与注意事项
+如果日志提示现有登录态失效、需要安全验证，或续期失败，你需要：
 
-1.  **遇到验证码/滑块风控怎么办？**
-    本脚本不会绕过图形验证码。现在刷新任务会先尝试用现有登录态续期，只有续期失败才退回密码登录，因此正常情况下更不容易撞风控。如果日志仍提示安全验证，请在**常用设备**上手动完成一次验证，然后重新运行 `refresh_cookie.py`，让脚本把新的 `MUSIC_U`、`__csrf` 和 `NETEASE_PYNCM_SESSION` 回写到青龙。
-2.  建议打卡任务和刷新任务的时间错开，避免产生冲突。
+1. 在常用设备上重新登录网易云并完成验证
+2. 重新抓取 `MUSIC_U` 和 `__csrf`
+3. 覆盖青龙中的 `MUSIC_U`、`CSRF`
+4. 删除或清空旧的 `NETEASE_PYNCM_SESSION`
+5. 再运行一次 `refresh_cookie.py`
 
-## 📜 声明
+## 声明
 
-  - 本项目基于 [ACAne0320/ncmp](https://github.com/ACAne0320/ncmp) 二次修改，专门适配青龙面板。
-  - 本项目遵循 MIT License，仅供学习交流使用，不得用于商业用途。
-  - 使用本脚本产生的一切后果由使用者自行承担。
-
-## 🙏 致谢
-
-  - 感谢原作者 [ACAne0320](https://github.com/ACAne0320) 开源的优秀架构与核心代码。
-  - [pyncm](https://github.com/mos9527/pyncm)
+仅供学习交流使用，使用风险自负。

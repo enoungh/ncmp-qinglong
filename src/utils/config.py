@@ -42,13 +42,6 @@ class Config:
         if full_extra_tasks := os.getenv("FULL_EXTRA_TASKS"):
             config["full_extra_tasks"] = full_extra_tasks.lower() in ("1", "true", "yes")
             
-        # 自动登录相关配置
-        if phone := os.getenv("NETEASE_PHONE"):
-            config["netease_phone"] = phone
-        if password := os.getenv("NETEASE_PASSWORD"):
-            config["netease_password"] = password
-        if md5_password := os.getenv("NETEASE_MD5_PASSWORD"):
-            config["netease_md5_password"] = md5_password
         if session_dump := os.getenv("NETEASE_PYNCM_SESSION"):
             config["netease_pyncm_session"] = session_dump
             

@@ -1,4 +1,3 @@
-import hashlib
 from typing import Dict, Optional, Tuple
 
 from ..utils.logger import Logger
@@ -6,7 +5,7 @@ from ..validators.cookie import CookieValidator
 
 try:
     from pyncm import CreateNewSession, DumpSessionAsString, LoadSessionFromString
-    from pyncm.apis.login import LoginRefreshToken, LoginViaCellphone
+    from pyncm.apis.login import LoginRefreshToken
 
     PYNCM_AVAILABLE = True
 except ImportError:
@@ -15,10 +14,6 @@ except ImportError:
 
 class AuthService:
     SESSION_DUMP_KEY = "Session_Dump"
-    RISK_CONTROL_HINT = (
-        "触发网易云安全验证，脚本不会绕过验证码。"
-        "请先在常用设备上手动完成一次验证，再重新运行刷新任务。"
-    )
 
     def __init__(self, logger: Logger):
         self.logger = logger
@@ -31,20 +26,6 @@ class AuthService:
     def _set_error(self, message: str) -> None:
         self.last_error = message
         self.logger.error(message)
-
-    def _hash_password(self, password: str) -> str:
-        """将明文密码转换为 MD5 哈希"""
-        return hashlib.md5(password.encode()).hexdigest()
-
-    def _mask_phone(self, phone: str) -> str:
-        if len(phone) < 7:
-            return phone
-        return f"{phone[:3]}****{phone[-4:]}"
-
-    def _looks_like_risk_control(self, message: str) -> bool:
-        lowered = message.lower()
-        keywords = ("验证码", "安全验证", "滑块", "拼图", "captcha", "verify", "risk")
-        return any(keyword in lowered for keyword in keywords)
 
     def _build_session(
         self,
@@ -68,9 +49,42 @@ class AuthService:
             session.csrf_token = csrf
         return session
 
+    def _get_cookie_value(self, session, name: str) -> Optional[str]:
+        candidates = [cookie for cookie in session.cookies if cookie.name == name]
+        if not candidates:
+            return None
+
+        if len(candidates) == 1:
+            return candidates[0].value
+
+        preferred_domains = (
+            ".music.163.com",
+            "music.163.com",
+            ".interface.music.163.com",
+            "interface.music.163.com",
+            "",
+        )
+
+        def sort_key(cookie):
+            domain = cookie.domain or ""
+            try:
+                domain_rank = preferred_domains.index(domain)
+            except ValueError:
+                domain_rank = len(preferred_domains)
+
+            # 优先保留更具体、更新的服务端 cookie，而不是最初手工注入的裸 cookie。
+            return (domain_rank, 0 if domain else 1, -len(domain), -(len(cookie.path or "/")))
+
+        selected = sorted(candidates, key=sort_key)[0]
+        domains = ", ".join(cookie.domain or "<host-only>" for cookie in candidates)
+        self.logger.warning(
+            f"检测到多个同名 Cookie: {name}，已自动选择 domain={selected.domain or '<host-only>'}。候选域名: {domains}"
+        )
+        return selected.value
+
     def _extract_auth_state(self, session) -> Optional[Dict[str, str]]:
-        music_u_cookie = session.cookies.get("MUSIC_U")
-        csrf_cookie = session.cookies.get("__csrf")
+        music_u_cookie = self._get_cookie_value(session, "MUSIC_U")
+        csrf_cookie = self._get_cookie_value(session, "__csrf")
 
         if not music_u_cookie:
             self._set_error("未能从会话中获取 MUSIC_U cookie")
@@ -101,7 +115,7 @@ class AuthService:
         music_u: Optional[str] = None,
         csrf: Optional[str] = None,
     ) -> Tuple[bool, Optional[Dict[str, str]]]:
-        """优先使用已有登录态续期，避免频繁触发高风险密码登录。"""
+        """使用已有登录态续期 Cookie。"""
         self.last_error = ""
 
         if not session_dump and not (music_u and csrf):
@@ -124,7 +138,7 @@ class AuthService:
                 self.logger.warning(f"续期接口返回异常，保留当前有效登录态: {refresh_message}")
                 return True, self._extract_auth_state(session)
 
-            session.csrf_token = session.cookies.get("__csrf") or session.csrf_token
+            session.csrf_token = self._get_cookie_value(session, "__csrf") or session.csrf_token
 
             refreshed_valid, refreshed_message = self._validate_session(session)
             if not refreshed_valid:
@@ -140,71 +154,4 @@ class AuthService:
 
         except Exception as exc:
             self._set_error(f"使用现有登录态刷新 Cookie 失败: {exc}")
-            return False, None
-
-    def login(
-        self,
-        phone: str,
-        password: Optional[str] = None,
-        md5_password: Optional[str] = None,
-    ) -> Tuple[bool, Optional[Dict[str, str]]]:
-        """
-        通过手机号和密码登录获取 Cookie
-
-        Args:
-            phone: 手机号
-            password: 明文密码（与md5_password二选一）
-            md5_password: MD5加密后的密码（与password二选一）
-
-        Returns:
-            (成功状态, Cookie字典)
-        """
-        self.last_error = ""
-
-        try:
-            self.logger.info(f"尝试使用 pyncm 登录账号: {self._mask_phone(phone)}")
-
-            if md5_password:
-                password_hash = md5_password
-                self.logger.debug("使用提供的MD5密码登录")
-            elif password:
-                password_hash = self._hash_password(password)
-                self.logger.debug("使用明文密码（转换为MD5）登录")
-            else:
-                self._set_error("未提供密码，无法登录")
-                return False, None
-
-            session = CreateNewSession()
-            result = LoginViaCellphone(
-                phone,
-                passwordHash=password_hash,
-                ctcode=86,
-                session=session,
-            )
-
-            if result.get("code") != 200:
-                error_msg = result.get("message", "未知错误")
-                self._set_error(f"登录失败: {error_msg}")
-                return False, None
-
-            session.csrf_token = session.cookies.get("__csrf") or session.csrf_token
-
-            is_valid, message = self._validate_session(session)
-            if not is_valid:
-                self._set_error(f"登录成功但登录态校验失败: {message}")
-                return False, None
-
-            auth_state = self._extract_auth_state(session)
-            if not auth_state:
-                return False, None
-
-            self.logger.info("登录成功并获取Cookie")
-            return True, auth_state
-
-        except Exception as exc:
-            raw_message = str(exc)
-            if self._looks_like_risk_control(raw_message):
-                self._set_error(self.RISK_CONTROL_HINT)
-            else:
-                self._set_error(f"pyncm 登录过程发生异常: {raw_message}")
             return False, None
