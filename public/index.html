@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ncmp - 网易云音乐合伙人（青龙面板专版）</title>
+  <style>
+    :root {
+      --primary: #e60026;
+      --primary-light: #ff2d51;
+      --bg: #f7f7f7;
+      --card-bg: #fff;
+      --text: #333;
+      --text-secondary: #666;
+      --border: #eee;
+      --code-bg: #f4f4f4;
+      --success: #52c41a;
+      --warning: #faad14;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --card-bg: #2a2a2a;
+        --text: #e0e0e0;
+        --text-secondary: #aaa;
+        --border: #3a3a3a;
+        --code-bg: #333;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .icon {
+      width: 1.2em;
+      height: 1.2em;
+      vertical-align: -0.15em;
+      fill: currentColor;
+      display: inline-block;
+    }
+
+    .icon-lg {
+      width: 1.5em;
+      height: 1.5em;
+      vertical-align: -0.25em;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: #fff;
+      padding: 3rem 1rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .hero-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card h2 .icon {
+      color: var(--primary);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .feature-icon .icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .feature-item h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .feature-item p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .steps {
+      counter-reset: step;
+    }
+
+    .step {
+      position: relative;
+      padding-left: 2.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .step h3 {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .step p, .step ul {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .step ul {
+      padding-left: 1.25rem;
+      margin-top: 0.3rem;
+    }
+
+    code {
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    th, td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.1em 0.5em;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-required {
+      background: #fff1f0;
+      color: #cf1322;
+    }
+
+    .badge-optional {
+      background: #f6ffed;
+      color: #389e0d;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: opacity 0.2s;
+      margin-top: 1rem;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .btn .icon {
+      width: 1em;
+      height: 1em;
+    }
+
+    .warning-box {
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: #614700;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .warning-box .icon {
+      flex-shrink: 0;
+      color: var(--warning);
+      margin-top: 0.15rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .badge-required {
+        background: #3a1520;
+        color: #ff7875;
+      }
+      .badge-optional {
+        background: #1a3520;
+        color: #95de64;
+      }
+      .warning-box {
+        background: #2b2611;
+        border-color: #594e1a;
+        color: #d4b106;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- All icons are inline SVGs - no external CDN or font dependencies -->
+
+  <div class="hero">
+    <!-- Music note icon -->
+    <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"/>
+      <circle cx="6" cy="18" r="3"/>
+      <circle cx="18" cy="16" r="3"/>
+    </svg>
+    <h1>ncmp 青龙面板专版</h1>
+    <p>网易云音乐合伙人全自动评分工具，完美适配青龙面板，支持自动刷新 Cookie</p>
+    <a class="btn btn-primary" href="https://github.com/enoungh/ncmp-qinglong" target="_blank" rel="noopener noreferrer">
+      <!-- GitHub icon -->
+      <svg class="icon" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      GitHub
+    </a>
+  </div>
+
+  <div class="container">
+
+    <!-- Features -->
+    <div class="card">
+      <h2>
+        <!-- Star icon -->
+        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        功能特点
+      </h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <!-- Check circle icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div>
+            <h3>全自动打卡</h3>
+            <p>每日 5 个基础 + 7 个额外评分任务</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <!-- Refresh icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </div>
+          <div>
+            <h3>自动刷新 Cookie</h3>
+            <p>定时登录刷新，无人值守运行</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <!-- Server icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              <line x1="6" y1="6" x2="6.01" y2="6"/>
+              <line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+          </div>
+          <div>
+            <h3>青龙面板适配</h3>
+            <p>原生支持环境变量与内部穿透</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <!-- Mail icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <h3>邮件通知</h3>
+            <p>Cookie 失效或执行失败自动提醒</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cookie Preparation -->
+    <div class="card">
+      <h2>
+        <!-- Key icon -->
+        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+        </svg>
+        使用前准备：获取 Cookie
+      </h2>
+      <div class="steps">
+        <div class="step">
+          <h3>登录网易云音乐</h3>
+          <p>打开 <a href="https://music.163.com/" target="_blank" rel="noopener noreferrer">网易云音乐网页版</a> 并登录账号</p>
+        </div>
+        <div class="step">
+          <h3>打开开发者工具</h3>
+          <p>按 <code>F12</code> 打开浏览器开发者工具</p>
+        </div>
+        <div class="step">
+          <h3>获取 Cookie</h3>
+          <p>切换到 <code>Network</code> 选项卡，刷新页面，在请求的 Cookie 中找到 <code>MUSIC_U</code> 和 <code>__csrf</code> 的值</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deployment Guide -->
+    <div class="card">
+      <h2>
+        <!-- Rocket icon -->
+        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+          <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 3 0 3 0"/>
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-3 0-3"/>
+        </svg>
+        青龙面板部署指南
+      </h2>
+      <div class="steps">
+        <div class="step">
+          <h3>安装依赖</h3>
+          <p>进入青龙面板 → <strong>依赖管理</strong> → 新建依赖 → 选择 <strong>Python3</strong></p>
+          <pre><code>requests pycryptodome pyncm</code></pre>
+        </div>
+        <div class="step">
+          <h3>配置环境变量</h3>
+          <p>进入青龙面板 → <strong>环境变量</strong> → 新建变量：</p>
+          <table>
+            <thead>
+              <tr>
+                <th>变量名</th>
+                <th>必填</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>MUSIC_U</code></td>
+                <td><span class="badge badge-required">必填</span></td>
+                <td>MUSIC_U 值</td>
+              </tr>
+              <tr>
+                <td><code>CSRF</code></td>
+                <td><span class="badge badge-required">必填</span></td>
+                <td>__csrf 值</td>
+              </tr>
+              <tr>
+                <td><code>NETEASE_PHONE</code></td>
+                <td><span class="badge badge-required">必填</span></td>
+                <td>登录手机号</td>
+              </tr>
+              <tr>
+                <td><code>NETEASE_MD5_PASSWORD</code></td>
+                <td><span class="badge badge-required">必填</span></td>
+                <td>密码的 MD5 值（或用 <code>NETEASE_PASSWORD</code>）</td>
+              </tr>
+              <tr>
+                <td><code>SCORE</code></td>
+                <td><span class="badge badge-optional">选填</span></td>
+                <td>评分策略：1-4（默认 3）</td>
+              </tr>
+              <tr>
+                <td><code>FULL_EXTRA_TASKS</code></td>
+                <td><span class="badge badge-optional">选填</span></td>
+                <td>true=完成所有额外任务</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="step">
+          <h3>拉取脚本仓库</h3>
+          <p>进入青龙面板 → <strong>定时任务</strong> → 新建任务：</p>
+          <pre><code>ql repo https://github.com/enoungh/ncmp-qinglong.git "main.py|refresh_cookie.py" "tests" "src" "main"</code></pre>
+          <p>定时规则：<code>0 0 * * *</code></p>
+        </div>
+        <div class="step">
+          <h3>设置打卡与刷新任务</h3>
+          <ul>
+            <li><strong>每日打卡：</strong><code>30 8 * * *</code></li>
+            <li><strong>刷新 Cookie：</strong><code>0 22 * * 0</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="card">
+      <h2>
+        <!-- Help circle icon -->
+        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        常见问题
+      </h2>
+      <div class="warning-box">
+        <!-- Alert triangle icon -->
+        <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          <strong>遇到验证码/滑块风控？</strong><br>
+          在电脑浏览器无痕模式下手动登录网易云、完成滑块验证，然后抓取新的 <code>MUSIC_U</code> 和 <code>__csrf</code> 重新覆盖青龙的环境变量即可。
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>
+      基于 <a href="https://github.com/ACAne0320/ncmp" target="_blank" rel="noopener noreferrer">ACAne0320/ncmp</a> 二次修改 · 遵循 MIT License
+    </p>
+    <p style="margin-top: 0.5rem;">
+      <!-- Heart icon -->
+      <svg class="icon" viewBox="0 0 24 24" fill="var(--primary)" stroke="none">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      感谢 <a href="https://github.com/mos9527/pyncm" target="_blank" rel="noopener noreferrer">pyncm</a>
+    </p>
+  </footer>
+
+</body>
+</html>

@@ -95,6 +95,21 @@ requests pycryptodome pyncm
     本脚本不包含破解图形验证码的逻辑。如果日志提示登录失败或遇到风控，请在**电脑浏览器无痕模式**下手动作业：登录网易云、手动完成滑块验证，然后抓取新的 `MUSIC_U` 和 `__csrf` 重新覆盖青龙的环境变量，即可解除风控。
 2.  建议打卡任务和刷新任务的时间错开，避免产生冲突。
 
+## 🌐 Cloudflare Pages 部署
+
+本项目提供了一个静态页面（`public/index.html`），可以部署到 Cloudflare Pages 作为项目介绍页。
+
+1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 **Workers & Pages**
+2. 点击 **Create** → **Pages** → **Connect to Git**
+3. 选择本仓库，配置如下：
+   - **构建命令：** 留空（无需构建）
+   - **构建输出目录：** `public`
+4. 点击 **Save and Deploy**
+
+> 页面中所有图标均使用内联 SVG，无需加载外部字体或 CDN 资源，确保在 Cloudflare Pages 上正常显示。
+
+-----
+
 ## 📜 声明
 
   - 本项目基于 [ACAne0320/ncmp](https://github.com/ACAne0320/ncmp) 二次修改，专门适配青龙面板。
